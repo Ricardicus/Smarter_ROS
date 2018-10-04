@@ -47,6 +47,12 @@ int main(int argc, char **argv)
   while (ros::ok()) {
     visualization_msgs::Marker marker;
 
+    // Incase we're playing back data, wait until the /clock time is available.
+    // Check 9_Replay_ROS slides.
+    if (ros::Time::now().toSec() == 0) {
+      continue;
+    }
+      
     // Query the /tf and find the pose between different frames and draw an arrow
     tf::StampedTransform transform;
     try{
