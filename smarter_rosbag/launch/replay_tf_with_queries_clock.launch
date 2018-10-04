@@ -1,0 +1,9 @@
+<launch>
+  <param name="/use_sim_time" value="true" />
+
+  <node name="play" pkg="rosbag" type="play" args="--clock $(find smarter_rosbag)/tf.bag"/>
+  <node name="get_tfs" pkg="smarter_tf" type="get_tfs"/>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find smarter_rviz)/launch/smarter_tf.rviz"/>
+
+</launch>

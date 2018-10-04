@@ -1,0 +1,6 @@
+<launch>
+  <node name="play" pkg="rosbag" type="play" args="$(find smarter_rosbag)/tf.bag"/>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find smarter_rviz)/launch/smarter_tf.rviz"/>
+
+</launch>
