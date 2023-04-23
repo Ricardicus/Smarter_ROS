@@ -29,6 +29,10 @@ Build and run:
 
 ```
 colcon build --symlink-install
+source install/setup.bash
+# list executables
+ros2 pkg executables my_package
+# Run 
 ros2 run my_package smarter_test_hello_world
 ```
 

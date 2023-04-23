@@ -52,7 +52,8 @@ ament_target_dependencies(image_subscriber_node
 install(TARGETS
   gray_scale_converter_node
   image_publisher_node
-  DESTINATION bin/${PROJECT_NAME}
+  image_subscriber_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()

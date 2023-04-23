@@ -20,22 +20,25 @@ public:
 private:
   void timerCallback()
   {
-    cv::Mat img = cv::imread(folder_path_ + "/" + std::to_string(count_) + ".jpg");
+    std::string folder = folder_path_ + "/" + std::to_string(count_) + ".jpg";
+    cv::Mat img = cv::imread(folder);
     if (img.empty()) {
       std::cout << "End of images" << std::endl;
       rclcpp::shutdown();
       return;
     }
-    count_++;
 
     sensor_msgs::msg::Image::SharedPtr msg_out = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", img).toImageMsg();
     pub_->publish(*msg_out);
+    std::cout << "Published image nbr " << count_ << std::endl;
+
+    count_++;
   }
 
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_;
   rclcpp::TimerBase::SharedPtr timer_;
   std::string folder_path_;
-  int count_ = 0;
+  int count_ = 1;
 };
 
 int main(int argc, char **argv)
