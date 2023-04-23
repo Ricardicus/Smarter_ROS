@@ -24,7 +24,7 @@ private:
     cv_bridge::CvImageConstPtr cvPtrImgRaw;
     try
     {
-      cvPtrImgRaw = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGRA8);
+      cvPtrImgRaw = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8);
     }
     catch (cv_bridge::Exception& e)
     {
