@@ -26,14 +26,32 @@ include_directories(
 ) # ${your_other_dependencies_INCLUDE_DIRS})
 
 add_executable(gray_scale_converter_node src/gray_scale_converter_node.cpp)
+
+# Adding a raw image publisher and grey scale subscriber program
+add_executable(image_publisher_node src/image_publisher_node.cpp)
+add_executable(image_subscriber_node src/image_subscriber_node.cpp)
+
 ament_target_dependencies(gray_scale_converter_node
   rclcpp
   sensor_msgs
   OpenCV
   cv_bridge) # your_other_dependencies)
 
+ament_target_dependencies(image_publisher_node
+  rclcpp
+  sensor_msgs
+  OpenCV
+  cv_bridge) 
+
+ament_target_dependencies(image_subscriber_node
+  rclcpp
+  sensor_msgs
+  OpenCV
+  cv_bridge) 
+
 install(TARGETS
   gray_scale_converter_node
+  image_publisher_node
   DESTINATION bin/${PROJECT_NAME}
 )
 
