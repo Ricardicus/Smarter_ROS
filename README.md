@@ -43,15 +43,12 @@ ros2 topic echo /magical_number std_msgs/msg/Int8
 ros2 topic pub --once /magical_number std_msgs/msg/Int8 "data: 42"
 ```
 
-## Issues with ROS in Docker (shared memory feature/bug in fast-dds)
+# Changing DDS implementation
 
-Test ros:rolling instead of ros:foxy. This seems to be a major obstacle in
-the current fast-dds implementation. It relies on shared memory by default.
+By default FastDDS is used. We can change it to Cyclone DDS:
 
 ```
-docker build -t ros2_foxy_opensplice:custom -f Dockerfile.opensplice .
-docker run -it --rm -e RMW_IMPLEMENTATION=rmw_opensplice_cpp --network ros2_network ros2_foxy_opensplice:custom
+sudo apt install ros-foxy-rmw-cyclonedds-cpp
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
-
-
 
