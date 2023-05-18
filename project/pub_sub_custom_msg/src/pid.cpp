@@ -1,7 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
-#include "custom_msg/msg/signal_reference.hpp"
-#include "custom_msg/msg/signal_true.hpp"
-#include "std_msgs/msg/float64.hpp"
+#include "custom_msg/msg/controller_output.hpp"
+#include "custom_msg/msg/controller_input.hpp"
 #include "control_toolbox/pid.hpp"
 
 class PIController : public rclcpp::Node
@@ -9,42 +8,35 @@ class PIController : public rclcpp::Node
 public:
     PIController(double p_gain, double i_gain) : Node("pi_controller"), pid_controller(p_gain, i_gain, 0.0, 0.0, 0.0)
     {
-        control_pub = this->create_publisher<std_msgs::msg::Float64>("control_signal", 10);
-        reference_sub = this->create_subscription<custom_msg::msg::SignalReference>(
-            "signal_reference", 10, std::bind(&PIController::referenceCallback, this, std::placeholders::_1));
-        true_sub = this->create_subscription<custom_msg::msg::SignalTrue>(
-            "signal_true", 10, std::bind(&PIController::trueCallback, this, std::placeholders::_1));
+        control_pub = this->create_publisher<custom_msg::msg::ControllerOutput>("controller_output", 10);
+        control_sub = this->create_subscription<custom_msg::msg::ControllerInput>(
+            "controller_input", 10, std::bind(&PIController::inputCallback, this, std::placeholders::_1));
+        last_time = this->get_clock()->now();
     }
 
 private:
-    void referenceCallback(const custom_msg::msg::SignalReference::SharedPtr msg)
+    void inputCallback(const custom_msg::msg::ControllerInput::SharedPtr msg)
     {
         reference = msg->reference;
-        computeControl();
-    }
-
-    void trueCallback(const custom_msg::msg::SignalTrue::SharedPtr msg)
-    {
         true_value = msg->true_value;
         computeControl();
     }
 
     void computeControl()
     {
-        double error = reference - true_value;
+        double error = true_value - reference;
         rclcpp::Duration dt = this->get_clock()->now() - last_time;
         last_time = this->get_clock()->now();
 
-        double control_signal = pid_controller.computeCommand(error, dt.nanoseconds());
+        double control_value = pid_controller.computeCommand(error, dt.nanoseconds());
 
-        auto message = std_msgs::msg::Float64();
-        message.data = control_signal;
+        auto message = custom_msg::msg::ControllerOutput();
+        message.control_value = control_value;
         control_pub->publish(message);
     }
 
-    rclcpp::Subscription<custom_msg::msg::SignalReference>::SharedPtr reference_sub;
-    rclcpp::Subscription<custom_msg::msg::SignalTrue>::SharedPtr true_sub;
-    rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr control_pub;
+    rclcpp::Subscription<custom_msg::msg::ControllerInput>::SharedPtr control_sub;
+    rclcpp::Publisher<custom_msg::msg::ControllerOutput>::SharedPtr control_pub;
     control_toolbox::Pid pid_controller;
     double reference;
     double true_value;
@@ -54,8 +46,8 @@ private:
 int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
-    double p_gain = 1.0;
-    double i_gain = 0.5;
+    double p_gain = 50.0;
+    double i_gain = 100.0;
     auto node = std::make_shared<PIController>(p_gain, i_gain);
     rclcpp::spin(node);
     rclcpp::shutdown();

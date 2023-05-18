@@ -35,8 +35,8 @@ endif()
 # Add after BUILD_TESTING endif()
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LogTf.msg"
-  "msg/SignalReference.msg"
-  "msg/SignalTrue.msg"
+  "msg/ControllerInput.msg"
+  "msg/ControllerOutput.msg"
 )
 
 ament_package()
