@@ -1,7 +1,0 @@
-<launch>
-
-  <node name="send_rviz_markers" pkg="smarter_rviz" type="send_rviz_markers"/>
-
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find smarter_rviz)/launch/smarter_rviz.rviz"/>
-
-</launch>
