@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>smarter_rosbag</name>
   <version>0.0.0</version>
   <description>The smarter_rosbag package</description>
@@ -27,13 +27,13 @@
   <!-- Example: -->
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <depend>roscpp</depend>
-  <depend>rosbag</depend>
-  <depend>tf</depend>
-  <depend>tf_conversions</depend>
-  <depend>eigen</depend>
-  <depend>boost</depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>rosbag2</depend>
+  <depend>tf2</depend>
+  <depend>tf2_eigen</depend>
+  <depend>eigen3</depend>
+  <depend>Boost</depend>
   <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
   
@@ -41,5 +41,6 @@
   <export>
     <!-- Other tools can request additional information be placed here -->
 
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

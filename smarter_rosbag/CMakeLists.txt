@@ -45,8 +45,9 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# Export dependencies
-ament_export_dependencies(rosbag2 nav_msgs sensor_msgs tf2 tf2_ros Boost Eigen3)
-
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
 # Package the project
 ament_package()
