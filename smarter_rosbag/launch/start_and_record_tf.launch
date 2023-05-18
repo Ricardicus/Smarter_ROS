@@ -1,8 +1,0 @@
-<launch>
-  <node name="send_tfs" pkg="smarter_tf" type="send_tfs"/>
-  <!-- if no path / filname is specified, check the ~/.ros folder -->
-  <node name="record" pkg="rosbag" type="record" args="-O $(find smarter_rosbag)/tf.bag /tf"/>
-
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find smarter_rviz)/launch/smarter_tf.rviz"/>
-
-</launch>

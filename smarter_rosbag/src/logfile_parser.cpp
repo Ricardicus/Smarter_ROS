@@ -2,10 +2,11 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <sensor_msgs/LaserScan.h>
-#include <nav_msgs/Odometry.h>
-#include <tf/transform_broadcaster.h>
-#include <rosbag/bag.h>
+#include <sensor_msgs/msg/laser_scan.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <rclcpp/rclcpp.hpp>
 #include <boost/program_options.hpp>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
@@ -23,7 +24,7 @@ template<class T> std::string toString (const T& x)
     return o.str ();
 }
 
-void parseSickMessage(char *tok, rosbag::Bag &obag){
+void parseSickMessage(char *tok, rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher){
   double ts;
   int scan_num;
   int sensor_id;
@@ -38,6 +39,8 @@ void parseSickMessage(char *tok, rosbag::Bag &obag){
 	
   tok = strtok(NULL," ");
   if(tok!=NULL) scan_num = atoi(tok); ///Scan number (rotating 0...255)
+  
+  (void)scan_num;
   tok = strtok(NULL," ");
   if(tok!=NULL) sensor_id = atoi(tok); ///Sensor ID
 	
@@ -61,8 +64,8 @@ void parseSickMessage(char *tok, rosbag::Bag &obag){
   }
 
   // Done reading. Create a ROS message.
-  sensor_msgs::LaserScan scan;
-  ros::Time rt(ts);
+  sensor_msgs::msg::LaserScan scan;
+  rclcpp::Time rt(ts);
   scan.header.stamp = rt;
   scan.header.frame_id = "laserscan" + toString(sensor_id);
 		
@@ -75,11 +78,11 @@ void parseSickMessage(char *tok, rosbag::Bag &obag){
 	
   for(int i=0;i<num_dist;i++) scan.ranges.push_back(r[i]);
 
-  obag.write("/laserscan"+toString(sensor_id),scan.header.stamp,scan);
+  publisher->publish(scan);
 }
 
 void parseStateMessage(char *tok,
-		       rosbag::Bag &obag){
+		       rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher){
   double ts;
   double x;
   double y;
@@ -99,44 +102,51 @@ void parseStateMessage(char *tok,
   if(tok!=NULL) pos_known = atoi(tok);
   tok = strtok(NULL," ");
   if(tok!=NULL) certainty = atoi(tok);
-	
+
+  (void)pos_known;
+  (void)certainty;
   // Create two types of ros message, the tf and odometry.
   // tf
-  geometry_msgs::TransformStamped state_trans;
-  geometry_msgs::Quaternion state_quat = tf::createQuaternionMsgFromYaw(a);
-  state_trans.header.stamp = ros::Time(ts);
+  geometry_msgs::msg::TransformStamped state_trans;
+  tf2::Quaternion state_quat;
+  state_quat.setRPY(0, 0, a);
+  state_trans.header.stamp = rclcpp::Time(ts);
   state_trans.header.frame_id = "/world";
   state_trans.child_frame_id = "/state_base_link";
 	
   state_trans.transform.translation.x = x;
   state_trans.transform.translation.y = y;
   state_trans.transform.translation.z = 0.0;
-  state_trans.transform.rotation = state_quat;
+  state_trans.transform.rotation.x = state_quat.x();
+  state_trans.transform.rotation.y = state_quat.y();
+  state_trans.transform.rotation.z = state_quat.z();
+  state_trans.transform.rotation.w = state_quat.w();
 
-  tf::tfMessage tfmsg;
-  tfmsg.transforms.push_back(state_trans);
-  obag.write("/tf",ros::Time(ts),tfmsg);
-	
   // odometry
-  nav_msgs::Odometry state;
-  state.header.stamp = ros::Time(ts);
+  nav_msgs::msg::Odometry state;
+  state.header.stamp = rclcpp::Time(ts);
   state.header.frame_id = "/world";
 		
   state.pose.pose.position.x = x;
   state.pose.pose.position.y = y;
   state.pose.pose.position.z = 0.0;
-  state.pose.pose.orientation = state_quat;
+  state.pose.pose.orientation.x = state_quat.x();
+  state.pose.pose.orientation.y = state_quat.y();
+  state.pose.pose.orientation.z = state_quat.z();
+  state.pose.pose.orientation.w = state_quat.w();
 
   state.child_frame_id = "state_base_link";
 
-  obag.write("/state",state.header.stamp,state);
+  publisher->publish(state);
 }
 
 
 int main (int ac, char* av[])
 {
+  rclcpp::init(ac, av);
+
   std::string file_name;
-  int protocol_ver;
+  //int protocol_ver;
   po::options_description desc("Allowed options");
   desc.add_options()
     ("help", "produce help message")
@@ -157,10 +167,10 @@ int main (int ac, char* av[])
   std::cout << "Loading : " << file_name << std::endl;
   infile.open (file_name.c_str()); ///<Input 
   std::cout << "... done." << std::endl;
-  rosbag::Bag obag;
 
-  std::cout << "Writing to : " << file_name+".bag" << std::endl;
-  obag.open(file_name+".bag", rosbag::bagmode::Write); ///output
+  auto node = rclcpp::Node::make_shared("ros2_converter");
+  auto laser_scan_publisher = node->create_publisher<sensor_msgs::msg::LaserScan>("/laserscan", 10);
+  auto odometry_publisher = node->create_publisher<nav_msgs::msg::Odometry>("/state", 10);
 
   while(!infile.eof()) // To get you all the lines.
     {
@@ -169,20 +179,21 @@ int main (int ac, char* av[])
       const char* delim = " ";
       char* msg = (char*)str.c_str();
       char *tok = strtok(msg,delim);
-      std_msgs::Header header;
+      std_msgs::msg::Header header;
 
       if(tok!=NULL) {
 	if(strncmp("sick",tok,4) == 0){
-	  parseSickMessage(tok, obag);
+	  parseSickMessage(tok, laser_scan_publisher);
 
 	}
 	else if(strncmp("state",tok,5) == 0){
-	  parseStateMessage(tok, obag);
+	  parseStateMessage(tok, odometry_publisher);
 	}
       }
     }
   
   infile.close();
-  obag.close();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
   std::cout << "... done." << std::endl;
 }
