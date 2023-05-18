@@ -1,3 +1,33 @@
+# This build requires control_toolbox
+
+sudo apt install ros-foxy-control-toolbox
+
+Running in network mode host required shared memory:
+
+docker run -it -v $(pwd):/root/smarter --cap-add=NET_ADMIN --privileged --net=host -v /dev/shm:/dev/shm osrf/ros:foxy-desktop
+
+## RCSX
+
+Client:
+
+docker run --rm -it --privileged --net=host -v /opt/rcsos-3.3.0:/opt/rcsos-3.3.0 --security-opt apparmor=unconfined --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged iofsm_client --middleware dds --grpc 50054
+
+App:
+
+docker run --rm -it --privileged --net=host -v /opt/rcsos-3.3.0:/opt/rcsos-3.3.0 --security-opt apparmor=unconfined --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged iofsm_app --middleware dds
+
+Controller Web GUI:
+
+docker run --rm -it --privileged --net=host -v /opt/rcsos-3.3.0:/opt/rcsos-3.3.0 --security-opt apparmor=unconfined --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged -v $(pwd)/rcsx_application/IOFSM/src/client/node/config:/mounted/config iofsm_client_nodejs -s=10 --config=/mounted/config/config_one_client.json
+
+IO sim:
+
+docker run --rm -it --privileged --net=host -v /opt/rcsos-3.3.0:/opt/rcsos-3.3.0 --security-opt apparmor=unconfined --security-opt seccomp=unconfined --cap-add=NET_ADMIN --privileged --env="DISPLAY=:2" --env="VNCPASSWORD=foobar" iofsm_io_sim --module_config /rcsx/module_config_sim.yaml --watertank --grpc=50051
+
+
+
+# The following content is taken from a tutorial online on how to make custom messages I save it here for some referenc es.
+
 Custom message definition files are a important part of the ROS ecosystem, as they allow you to define the custom data structure used to represent the information that can exchange between nodes based on your application’s specifications and design. This is useful if the ROS-provided built-in message types do not meet your requirements, or if you wish to use a specific data format that is not supported by the built-in message types.
 
 These.msg .srvfiles are input to IDL (Interface Definition Language) generators, which generate code in a variety of programming languages, including C++, Python, and others. The generated code contains classes for serialising and deserializing message data, as well as access and modification methods for message fields. This code can then be utilised in a ROS 2 application to create and manipulate message data.
