@@ -1,7 +1,8 @@
 #!/bin/bash
 
-. /opt/ros/foxy/setup.bash
-cd /home/dockeruser/dev_ws/pub_sub_custom_msg
-. install/setup.bash
+cd /home/dockeruser/dev_ws
+source /opt/ros/foxy/setup.bash
+source ./install/setup.bash
+source ./pub_sub_custom_msg/install/setup.bash
 
-ros2 launch pub_sub_custom_msg pid_launch.py 
+./pub_sub_custom_msg/install/pub_sub_custom_msg/lib/pub_sub_custom_msg/pid_controller
